@@ -17,7 +17,20 @@ interface ListenerEntry<T = any, R = any> {
 }
 
 export class SuperEvents {
+  private static instance: SuperEvents | null = null;
   private events: Map<string, ListenerEntry[]> = new Map();
+
+  private constructor() {}
+
+  /**
+   * Get the singleton instance of SuperEvents.
+   */
+  static getInstance(): SuperEvents {
+    if (!SuperEvents.instance) {
+      SuperEvents.instance = new SuperEvents();
+    }
+    return SuperEvents.instance;
+  }
 
   /**
    * Register a listener for an event.
@@ -145,5 +158,12 @@ export class SuperEvents {
       if (results.length === 1) return results[0];
       return results.find(r => r != null && r != undefined);
     });
+  }
+
+  /**
+   * Remove all listeners for all events.
+   */
+  clear(): void {
+    this.events.clear();
   }
 } 

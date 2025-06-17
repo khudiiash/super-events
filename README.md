@@ -17,7 +17,8 @@ npm install super-events
 ```typescript
 import { SuperEvents } from 'super-events';
 
-const events = new SuperEvents();
+// Get the singleton instance
+const events = SuperEvents.getInstance();
 
 // Register a listener
 const unsub = events.on('my:event', (payload) => {
@@ -45,6 +46,9 @@ events.once('my:event', (payload) => {
 
 // Unsubscribe
 unsub();
+
+// Remove all listeners
+events.clear();
 ```
 
 ## API
@@ -63,6 +67,9 @@ Emit an event to all listeners. Supports async listeners. Returns a promise of a
 
 ### `call(event, ...args): Promise<any[]>`
 Call all listeners for an event and get their return values (sync or async).
+
+### `clear()`
+Remove all listeners for all events.
 
 ## Features
 - **Loose coupling**: Emitters and listeners are decoupled

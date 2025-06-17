@@ -4,7 +4,8 @@ describe('SuperEvents', () => {
   let events: SuperEvents;
 
   beforeEach(() => {
-    events = new SuperEvents();
+    events = SuperEvents.getInstance();
+    events.clear();
   });
 
   it('should call listeners and return their values', async () => {
@@ -33,7 +34,7 @@ describe('SuperEvents', () => {
     expect(result).toEqual([6, 7]);
   });
 
-  it('should support findResult to get first non-null result', async () => {
+  it('should support first to get first non-null result', async () => {
     events.on('find', (x: number) => null);
     events.on('find', (x: number) => undefined);
     events.on('find', (x: number) => x * 2);
@@ -41,7 +42,7 @@ describe('SuperEvents', () => {
     expect(result).toBe(8);
   });
 
-  it('should support findResultAsync to get first non-null result', async () => {
+  it('should support firstAsync to get first non-null result', async () => {
     events.on('findAsync', async (x: number) => null);
     events.on('findAsync', async (x: number) => undefined);
     events.on('findAsync', async (x: number) => x * 2);
@@ -80,5 +81,20 @@ describe('SuperEvents', () => {
     unsub();
     await events.emit('unsub', 1);
     expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('should always return the same instance', () => {
+    const instance1 = SuperEvents.getInstance();
+    const instance2 = SuperEvents.getInstance();
+    expect(instance1).toBe(instance2);
+  });
+
+  it('clear() should remove all listeners', () => {
+    const instance = SuperEvents.getInstance();
+    const fn = jest.fn();
+    instance.on('clearTest', fn);
+    expect(instance['events'].size).toBeGreaterThan(0);
+    instance.clear();
+    expect(instance['events'].size).toBe(0);
   });
 }); 
