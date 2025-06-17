@@ -1,8 +1,8 @@
 /**
- * SuperObserver: A flexible event/observer system with return values, async, and once support.
+ * SuperEvents: A flexible event/observer system with return values, async, and once support.
  *
  * Usage:
- *   const events = new EventManager();
+ *   const events = new SuperEvents();
  *   events.on('event', (data) => ...);
  *   events.emit('event', ...args);
  *   events.call('event', ...args); // gets return values
@@ -15,7 +15,7 @@ interface ListenerEntry<T = any, R = any> {
   once: boolean;
 }
 
-export class EventManager {
+export class SuperEvents {
   private events: Map<string, ListenerEntry[]> = new Map();
 
   /**

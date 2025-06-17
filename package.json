@@ -1,9 +1,9 @@
 {
-  "name": "super-observer",
+  "name": "super-events",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/EventManager.js",
-  "types": "dist/EventManager.d.ts",
+  "main": "dist/SuperEvents.js",
+  "types": "dist/SuperEvents.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest"

@@ -1,4 +1,4 @@
-# SuperObserver
+# SuperEvents
 
 A flexible, decoupled event/observer system for TypeScript and JavaScript with:
 - Return values from listeners
@@ -9,15 +9,15 @@ A flexible, decoupled event/observer system for TypeScript and JavaScript with:
 ## Installation
 
 ```
-npm install super-observer
+npm install super-events
 ```
 
 ## Usage
 
 ```typescript
-import { EventManager } from 'super-observer';
+import { SuperEvents } from 'super-events';
 
-const events = new EventManager();
+const events = new SuperEvents();
 
 // Register a listener
 const unsub = events.on('my:event', (payload) => {

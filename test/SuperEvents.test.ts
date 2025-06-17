@@ -1,10 +1,10 @@
-import { EventManager } from '../src/EventManager';
+import { SuperEvents } from '../src/SuperEvents';
 
-describe('EventManager', () => {
-  let events: EventManager;
+describe('SuperEvents', () => {
+  let events: SuperEvents;
 
   beforeEach(() => {
-    events = new EventManager();
+    events = new SuperEvents();
   });
 
   it('should call listeners and return their values', async () => {
