@@ -25,6 +25,15 @@ class SuperEvents {
         this.events = new Map();
     }
     /**
+     * Get the singleton instance of SuperEvents.
+     */
+    static getInstance() {
+        if (!SuperEvents.instance) {
+            SuperEvents.instance = new SuperEvents();
+        }
+        return SuperEvents.instance;
+    }
+    /**
      * Register a listener for an event.
      * @param event Event name
      * @param callback Listener function
@@ -158,5 +167,12 @@ class SuperEvents {
             });
         });
     }
+    /**
+     * Remove all listeners for all events.
+     */
+    clear() {
+        this.events.clear();
+    }
 }
 exports.SuperEvents = SuperEvents;
+SuperEvents.instance = null;

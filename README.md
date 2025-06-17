@@ -9,13 +9,13 @@ A flexible, decoupled event/observer system for TypeScript and JavaScript with:
 ## Installation
 
 ```
-npm install super-events
+npm install @khudiiash/super-events
 ```
 
 ## Usage
 
 ```typescript
-import { SuperEvents } from 'super-events';
+import { SuperEvents } from '@khudiiash/super-events';
 
 // Get the singleton instance
 const events = SuperEvents.getInstance();

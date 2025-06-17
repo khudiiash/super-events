@@ -13,7 +13,8 @@ const SuperEvents_1 = require("../src/SuperEvents");
 describe('SuperEvents', () => {
     let events;
     beforeEach(() => {
-        events = new SuperEvents_1.SuperEvents();
+        events = SuperEvents_1.SuperEvents.getInstance();
+        events.clear();
     });
     it('should call listeners and return their values', () => __awaiter(void 0, void 0, void 0, function* () {
         events.on('test', (x) => x + 1);
@@ -37,14 +38,14 @@ describe('SuperEvents', () => {
         const result = yield events.callAsync('asyncMulti', 5);
         expect(result).toEqual([6, 7]);
     }));
-    it('should support findResult to get first non-null result', () => __awaiter(void 0, void 0, void 0, function* () {
+    it('should support first to get first non-null result', () => __awaiter(void 0, void 0, void 0, function* () {
         events.on('find', (x) => null);
         events.on('find', (x) => undefined);
         events.on('find', (x) => x * 2);
         const result = events.first('find', 4);
         expect(result).toBe(8);
     }));
-    it('should support findResultAsync to get first non-null result', () => __awaiter(void 0, void 0, void 0, function* () {
+    it('should support firstAsync to get first non-null result', () => __awaiter(void 0, void 0, void 0, function* () {
         events.on('findAsync', (x) => __awaiter(void 0, void 0, void 0, function* () { return null; }));
         events.on('findAsync', (x) => __awaiter(void 0, void 0, void 0, function* () { return undefined; }));
         events.on('findAsync', (x) => __awaiter(void 0, void 0, void 0, function* () { return x * 2; }));
@@ -80,4 +81,17 @@ describe('SuperEvents', () => {
         yield events.emit('unsub', 1);
         expect(fn).not.toHaveBeenCalled();
     }));
+    it('should always return the same instance', () => {
+        const instance1 = SuperEvents_1.SuperEvents.getInstance();
+        const instance2 = SuperEvents_1.SuperEvents.getInstance();
+        expect(instance1).toBe(instance2);
+    });
+    it('clear() should remove all listeners', () => {
+        const instance = SuperEvents_1.SuperEvents.getInstance();
+        const fn = jest.fn();
+        instance.on('clearTest', fn);
+        expect(instance['events'].size).toBeGreaterThan(0);
+        instance.clear();
+        expect(instance['events'].size).toBe(0);
+    });
 });
