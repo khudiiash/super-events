@@ -6,7 +6,8 @@
   "types": "dist/SuperEvents.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "example": "node example.js"
   },
   "keywords": [],
   "author": "",

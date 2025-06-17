@@ -5,7 +5,8 @@
  *   const events = new SuperEvents();
  *   events.on('event', (data) => ...);
  *   events.emit('event', ...args);
- *   events.call('event', ...args); // gets return values
+ *   events.call('event', ...args); // gets return values (sync)
+ *   await events.callAsync('event', ...args); // gets return values (async)
  */
 
 export type Listener<T = any, R = any> = (payload: T) => R | Promise<R>;
@@ -74,13 +75,41 @@ export class SuperEvents {
   }
 
   /**
+   * Call all listeners for an event and get their return values synchronously.
+   * Throws if any listener returns a Promise (i.e., is async).
+   * @param event Event name
+   * @param args Arguments to pass to listeners
+   * @returns Array of listener return values
+   */
+  call<T = any, R = any>(event: string, ...args: [T]): R | R[] {
+    if (!this.events.has(event)) return [];
+    const listeners = this.events.get(event)!;
+    const results: R[] = [];
+    for (let i = 0; i < listeners.length; i++) {
+      const { callback, once } = listeners[i];
+      const result = callback(...args);
+      if (result instanceof Promise) {
+        throw new Error('SuperEvents: call() cannot be used with async listeners. Use callAsync() instead.');
+      }
+      results.push(result);
+      if (once) {
+        listeners.splice(i, 1);
+        i--;
+      }
+    }
+    if (listeners.length === 0) this.events.delete(event);
+    return results;
+  }
+
+  /**
    * Call all listeners for an event and get their return values (sync or async).
    * @param event Event name
    * @param args Arguments to pass to listeners
    * @returns Promise of all listener return values
    */
-  async call<T = any, R = any>(event: string, ...args: [T]): Promise<R[]> {
-    return this.emit<T, R>(event, ...args);
+  async callAsync<T = any, R = any>(event: string, ...args: [T]): Promise<R | R[]> {
+    const results = await this.emit<T, R>(event, ...args);
+    return results;
   }
 
   private _addListener<T, R>(event: string, callback: Listener<T, R>, once: boolean): () => void {
@@ -89,5 +118,32 @@ export class SuperEvents {
     this.events.get(event)!.push(entry);
     // Return unsubscribe function
     return () => this.off(event, callback);
+  }
+
+  /**
+   * Call all listeners for an event and get the first non-null return value.
+   * @param event Event name
+   * @param args Arguments to pass to listeners
+   * @returns First non-null and non-undefined return value
+   */
+  first<T = any, R = any>(event: string, ...args: [T]): R | undefined {
+    const results = this.call<T, R>(event, ...args);
+    if (Array.isArray(results)) {
+      return results.find(r => r != null && r != undefined);
+    }
+    return results;
+  }
+
+  /**
+   * Call all listeners for an event and get the first non-null return value.
+   * @param event Event name
+   * @param args Arguments to pass to listeners
+   * @returns First non-null and non-undefined return value
+   */
+  async firstAsync<T = any, R = any>(event: string, ...args: [T]): Promise<R | undefined> {
+    return this.emit<T, R>(event, ...args).then(results => {
+      if (results.length === 1) return results[0];
+      return results.find(r => r != null && r != undefined);
+    });
   }
 } 

@@ -14,6 +14,41 @@ describe('SuperEvents', () => {
     expect(results).toEqual([6, 10]);
   });
 
+  it('should return array even if only one listener (call)', async () => {
+    events.on('single', (x: number) => x + 42);
+    const result = await events.call('single', 8);
+    expect(result).toEqual([50]);
+  });
+
+  it('should return array even if only one listener (callAsync)', async () => {
+    events.on('asyncSingle', async (x: number) => x * 3);
+    const result = await events.callAsync('asyncSingle', 7);
+    expect(result).toEqual([21]);
+  });
+
+  it('should return array if multiple listeners (callAsync)', async () => {
+    events.on('asyncMulti', async (x: number) => x + 1);
+    events.on('asyncMulti', async (x: number) => x + 2);
+    const result = await events.callAsync('asyncMulti', 5);
+    expect(result).toEqual([6, 7]);
+  });
+
+  it('should support findResult to get first non-null result', async () => {
+    events.on('find', (x: number) => null);
+    events.on('find', (x: number) => undefined);
+    events.on('find', (x: number) => x * 2);
+    const result = events.first('find', 4);
+    expect(result).toBe(8);
+  });
+
+  it('should support findResultAsync to get first non-null result', async () => {
+    events.on('findAsync', async (x: number) => null);
+    events.on('findAsync', async (x: number) => undefined);
+    events.on('findAsync', async (x: number) => x * 2);
+    const result = await events.firstAsync('findAsync', 4);
+    expect(result).toBe(8);
+  });
+
   it('should support async listeners', async () => {
     events.on('async', async (x: number) => x + 10);
     events.on('async', (x: number) => Promise.resolve(x * 3));

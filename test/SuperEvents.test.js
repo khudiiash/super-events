@@ -21,6 +21,36 @@ describe('SuperEvents', () => {
         const results = yield events.call('test', 5);
         expect(results).toEqual([6, 10]);
     }));
+    it('should return array even if only one listener (call)', () => __awaiter(void 0, void 0, void 0, function* () {
+        events.on('single', (x) => x + 42);
+        const result = yield events.call('single', 8);
+        expect(result).toEqual([50]);
+    }));
+    it('should return array even if only one listener (callAsync)', () => __awaiter(void 0, void 0, void 0, function* () {
+        events.on('asyncSingle', (x) => __awaiter(void 0, void 0, void 0, function* () { return x * 3; }));
+        const result = yield events.callAsync('asyncSingle', 7);
+        expect(result).toEqual([21]);
+    }));
+    it('should return array if multiple listeners (callAsync)', () => __awaiter(void 0, void 0, void 0, function* () {
+        events.on('asyncMulti', (x) => __awaiter(void 0, void 0, void 0, function* () { return x + 1; }));
+        events.on('asyncMulti', (x) => __awaiter(void 0, void 0, void 0, function* () { return x + 2; }));
+        const result = yield events.callAsync('asyncMulti', 5);
+        expect(result).toEqual([6, 7]);
+    }));
+    it('should support findResult to get first non-null result', () => __awaiter(void 0, void 0, void 0, function* () {
+        events.on('find', (x) => null);
+        events.on('find', (x) => undefined);
+        events.on('find', (x) => x * 2);
+        const result = events.first('find', 4);
+        expect(result).toBe(8);
+    }));
+    it('should support findResultAsync to get first non-null result', () => __awaiter(void 0, void 0, void 0, function* () {
+        events.on('findAsync', (x) => __awaiter(void 0, void 0, void 0, function* () { return null; }));
+        events.on('findAsync', (x) => __awaiter(void 0, void 0, void 0, function* () { return undefined; }));
+        events.on('findAsync', (x) => __awaiter(void 0, void 0, void 0, function* () { return x * 2; }));
+        const result = yield events.firstAsync('findAsync', 4);
+        expect(result).toBe(8);
+    }));
     it('should support async listeners', () => __awaiter(void 0, void 0, void 0, function* () {
         events.on('async', (x) => __awaiter(void 0, void 0, void 0, function* () { return x + 10; }));
         events.on('async', (x) => Promise.resolve(x * 3));

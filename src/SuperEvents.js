@@ -6,7 +6,8 @@
  *   const events = new SuperEvents();
  *   events.on('event', (data) => ...);
  *   events.emit('event', ...args);
- *   events.call('event', ...args); // gets return values
+ *   events.call('event', ...args); // gets return values (sync)
+ *   await events.callAsync('event', ...args); // gets return values (async)
  */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -82,14 +83,43 @@ class SuperEvents {
         });
     }
     /**
+     * Call all listeners for an event and get their return values synchronously.
+     * Throws if any listener returns a Promise (i.e., is async).
+     * @param event Event name
+     * @param args Arguments to pass to listeners
+     * @returns Array of listener return values
+     */
+    call(event, ...args) {
+        if (!this.events.has(event))
+            return [];
+        const listeners = this.events.get(event);
+        const results = [];
+        for (let i = 0; i < listeners.length; i++) {
+            const { callback, once } = listeners[i];
+            const result = callback(...args);
+            if (result instanceof Promise) {
+                throw new Error('SuperEvents: call() cannot be used with async listeners. Use callAsync() instead.');
+            }
+            results.push(result);
+            if (once) {
+                listeners.splice(i, 1);
+                i--;
+            }
+        }
+        if (listeners.length === 0)
+            this.events.delete(event);
+        return results;
+    }
+    /**
      * Call all listeners for an event and get their return values (sync or async).
      * @param event Event name
      * @param args Arguments to pass to listeners
      * @returns Promise of all listener return values
      */
-    call(event, ...args) {
+    callAsync(event, ...args) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.emit(event, ...args);
+            const results = yield this.emit(event, ...args);
+            return results;
         });
     }
     _addListener(event, callback, once) {
@@ -99,6 +129,34 @@ class SuperEvents {
         this.events.get(event).push(entry);
         // Return unsubscribe function
         return () => this.off(event, callback);
+    }
+    /**
+     * Call all listeners for an event and get the first non-null return value.
+     * @param event Event name
+     * @param args Arguments to pass to listeners
+     * @returns First non-null and non-undefined return value
+     */
+    first(event, ...args) {
+        const results = this.call(event, ...args);
+        if (Array.isArray(results)) {
+            return results.find(r => r != null && r != undefined);
+        }
+        return results;
+    }
+    /**
+     * Call all listeners for an event and get the first non-null return value.
+     * @param event Event name
+     * @param args Arguments to pass to listeners
+     * @returns First non-null and non-undefined return value
+     */
+    firstAsync(event, ...args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.emit(event, ...args).then(results => {
+                if (results.length === 1)
+                    return results[0];
+                return results.find(r => r != null && r != undefined);
+            });
+        });
     }
 }
 exports.SuperEvents = SuperEvents;
