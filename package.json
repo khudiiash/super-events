@@ -1,6 +1,6 @@
 {
   "name": "@khudiiash/super-events",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "",
   "main": "dist/SuperEvents.js",
   "types": "dist/SuperEvents.d.ts",

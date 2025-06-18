@@ -78,15 +78,15 @@ export class SuperEvents<Events extends Record<string, any> = any> {
   /**
    * Emit an event to all listeners synchronously. Does not support async listeners.
    * @param {keyof Events} event Event name
-   * @param {Events[typeof event]} data Arguments to pass to listeners
+   * @param {Events[typeof event]} [data] Arguments to pass to listeners (optional)
    * @returns void
    */
-  emit<K extends keyof Events>(event: K, data: Events[K]): void {
+  emit<K extends keyof Events>(event: K, data?: Events[K]): void {
     if (!this.events.has(event as string)) return;
     const listeners = this.events.get(event as string)!;
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      const result = callback(data);
+      const result = callback(data as Events[K]);
       if (result instanceof Promise) {
         throw new Error('SuperEvents: emit() cannot be used with async listeners. Use emitAsync() instead.');
       }
@@ -101,16 +101,16 @@ export class SuperEvents<Events extends Record<string, any> = any> {
   /**
    * Emit an event to all listeners asynchronously. Supports async listeners.
    * @param {keyof Events} event Event name
-   * @param {Events[typeof event]} data Arguments to pass to listeners
+   * @param {Events[typeof event]} [data] Arguments to pass to listeners (optional)
    * @returns Promise<void>
    */
-  async emitAsync<K extends keyof Events>(event: K, data: Events[K]): Promise<void> {
+  async emitAsync<K extends keyof Events>(event: K, data?: Events[K]): Promise<void> {
     if (!this.events.has(event as string)) return;
     const listeners = this.events.get(event as string)!;
     const promises: Promise<any>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      promises.push(Promise.resolve(callback(data)));
+      promises.push(Promise.resolve(callback(data as Events[K])));
       if (once) {
         listeners.splice(i, 1);
         i--;
@@ -124,16 +124,16 @@ export class SuperEvents<Events extends Record<string, any> = any> {
    * Call all listeners for an event and get their return values synchronously.
    * Returns an array of all listeners return values.
    * @param {keyof Events} event Event name
-   * @param {Events[typeof event]} data Arguments to pass to listeners
+   * @param {Events[typeof event]} [data] Arguments to pass to listeners (optional)
    * @returns Array of listener return values
    */
-  callAll<K extends keyof Events, R = any>(event: K, data: Events[K]): R | R[] {
+  callAll<K extends keyof Events, R = any>(event: K, data?: Events[K]): R | R[] {
     if (!this.events.has(event as string)) return [];
     const listeners = this.events.get(event as string)!;
     const results: R[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      const result = callback(data);
+      const result = callback(data as Events[K]);
       if (result instanceof Promise) {
         throw new Error('SuperEvents: call() cannot be used with async listeners. Use callAsync() instead.');
       }
@@ -150,16 +150,16 @@ export class SuperEvents<Events extends Record<string, any> = any> {
   /**
    * Call all listeners for an event and get their return values (sync or async).
    * @param {keyof Events} event Event name
-   * @param {Events[typeof event]} data Arguments to pass to listeners
+   * @param {Events[typeof event]} [data] Arguments to pass to listeners (optional)
    * @returns Promise of all listener return values
    */
-  async callAllAsync<K extends keyof Events, R = any>(event: K, data: Events[K]): Promise<R | R[]> {
+  async callAllAsync<K extends keyof Events, R = any>(event: K, data?: Events[K]): Promise<R | R[]> {
     if (!this.events.has(event as string)) return [];
     const listeners = this.events.get(event as string)!;
     const promises: Promise<R>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      promises.push(Promise.resolve(callback(data)));
+      promises.push(Promise.resolve(callback(data as Events[K])));
       if (once) {
         listeners.splice(i, 1);
         i--;
@@ -180,10 +180,10 @@ export class SuperEvents<Events extends Record<string, any> = any> {
   /**
    * Call all listeners for an event and get the first non-null return value.
    * @param {keyof Events} event Event name
-   * @param {Events[typeof event]} data Arguments to pass to listeners
+   * @param {Events[typeof event]} [data] Arguments to pass to listeners (optional)
    * @returns First non-null and non-undefined return value
    */
-  callFirst<K extends keyof Events, R = any>(event: K, data: Events[K]): R | undefined {
+  callFirst<K extends keyof Events, R = any>(event: K, data?: Events[K]): R | undefined {
     const results = this.callAll<K, R>(event, data);
     if (Array.isArray(results)) {
       return results.find(r => r != null && r != undefined);
@@ -194,16 +194,16 @@ export class SuperEvents<Events extends Record<string, any> = any> {
   /**
    * Call all listeners for an event and get the first non-null return value.
    * @param {keyof Events} event Event name
-   * @param {Events[typeof event]} data Arguments to pass to listeners
+   * @param {Events[typeof event]} [data] Arguments to pass to listeners (optional)
    * @returns First non-null and non-undefined return value
    */
-  async callFirstAsync<K extends keyof Events, R = any>(event: K, data: Events[K]): Promise<R | undefined> {
+  async callFirstAsync<K extends keyof Events, R = any>(event: K, data?: Events[K]): Promise<R | undefined> {
     if (!this.events.has(event as string)) return undefined;
     const listeners = this.events.get(event as string)!;
     const promises: Promise<R>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      promises.push(Promise.resolve(callback(data)));
+      promises.push(Promise.resolve(callback(data as Events[K])));
       if (once) {
         listeners.splice(i, 1);
         i--;

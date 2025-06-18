@@ -38,10 +38,12 @@ events.once('my:event', (payload) => {
 
 // Emit an event (sync, void)
 events.emit('my:event', 5);
+events.emit('userLogout');
 
 // Emit an event (async, void)
 (async () => {
   await events.emitAsync('my:event', 5);
+  await events.emitAsync('userLogout');
 })();
 
 // Call and get return values (sync)
@@ -111,7 +113,7 @@ You can get **editor hints and autocomplete** in plain JavaScript by using JSDoc
     "module": "commonjs",
     "target": "es2020"
   },
-  "include": ["src", "dist", "example.js"]
+  "include": ["src", "dist"]
 }
 ```
 
@@ -164,23 +166,23 @@ Register a one-time listener for an event. Returns an unsubscribe function.
 ### `off(event, callback): void`
 Remove a specific listener for an event.
 
-### `emit(event, data): void`
-Emit an event to all listeners synchronously. Does not support async listeners. Does not return any value.
+### `emit(event, [data]): void`
+Emit an event to all listeners synchronously. Does not support async listeners. Does not return any value. The data argument is optional (especially for events with undefined payload).
 
-### `emitAsync(event, data): Promise<void>`
-Emit an event to all listeners asynchronously. Supports async listeners. Does not return any value.
+### `emitAsync(event, [data]): Promise<void>`
+Emit an event to all listeners asynchronously. Supports async listeners. Does not return any value. The data argument is optional (especially for events with undefined payload).
 
-### `callAll(event, data): any[]`
-Call all listeners for an event synchronously and get their return values. Throws if any listener is async.
+### `callAll(event, [data]): any[]`
+Call all listeners for an event synchronously and get their return values. Throws if any listener is async. The data argument is optional (especially for events with undefined payload).
 
-### `callAllAsync(event, data): Promise<any[]>`
-Call all listeners for an event and get their return values (supports async listeners). Returns a promise of all listener return values.
+### `callAllAsync(event, [data]): Promise<any[]>`
+Call all listeners for an event and get their return values (supports async listeners). Returns a promise of all listener return values. The data argument is optional (especially for events with undefined payload).
 
-### `callFirst(event, data): any`
-Call all listeners for an event synchronously and get the first non-null return value. Throws if any listener is async.
+### `callFirst(event, [data]): any`
+Call all listeners for an event synchronously and get the first non-null return value. Throws if any listener is async. The data argument is optional (especially for events with undefined payload).
 
-### `callFirstAsync(event, data): Promise<any>`
-Call all listeners for an event and get the first non-null return value (supports async listeners). Returns a promise of the first non-null return value.
+### `callFirstAsync(event, [data]): Promise<any>`
+Call all listeners for an event and get the first non-null return value (supports async listeners). Returns a promise of the first non-null return value. The data argument is optional (especially for events with undefined payload).
 
 ### `clear(): void`
 Remove all listeners for all events.
