@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "maxNodeModuleJsDepth": 2,
+    "module": "commonjs",
+    "target": "es2020",
+    "baseUrl": "."
+  },
+  "include": [
+    "src",
+    "dist",
+    "example.js"
+  ],
+  "exclude": ["dist", "node_modules"]
+}

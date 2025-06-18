@@ -9,7 +9,7 @@ A flexible, decoupled event/observer system for TypeScript and JavaScript with:
 
 ## Installation
 
-```
+```sh
 npm install @khudiiash/super-events
 ```
 
@@ -70,6 +70,88 @@ unsub();
 // Remove all listeners
 events.clear();
 ```
+
+## Advanced Type-Safe Usage (TypeScript)
+
+SuperEvents supports **type-safe event names and payloads** using generics. This gives you full autocomplete and compile-time safety for both event names and payloads.
+
+```typescript
+import { SuperEvents } from '@khudiiash/super-events';
+
+type MyEvents = {
+  event1: { userID: string; age: number };
+  event2: { orderId: number; amount: number };
+  userLogout: undefined;
+};
+
+const events = new SuperEvents<MyEvents>();
+
+events.on('event1', (data) => {
+  // data: { userID: string; age: number }
+});
+
+events.emit('event2', { orderId: 123, amount: 99.99 }); // type-checked!
+events.emit('userLogout', undefined); // type-checked!
+
+// TypeScript will catch errors if you use a wrong event name or payload
+// events.emit('notAnEvent', {}); // Error: notAnEvent does not exist
+// events.emit('event1', { foo: 1 }); // Error: missing userID, age
+```
+
+## Editor Integration for JavaScript (JSDoc)
+
+You can get **editor hints and autocomplete** in plain JavaScript by using JSDoc typedefs and a `jsconfig.json` file.
+
+### 1. Create a `jsconfig.json` in your project root:
+
+```json
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "module": "commonjs",
+    "target": "es2020"
+  },
+  "include": ["src", "dist", "example.js"]
+}
+```
+
+### 2. Use JSDoc typedefs for your event map:
+
+```js
+/**
+ * @typedef {{
+ *   event1: { userID: string, age: number },
+ *   event2: { orderId: number, amount: number },
+ *   userLogout: undefined
+ * }} MyEvents
+ */
+
+/** @type {import('@khudiiash/super-events').SuperEvents<MyEvents>} */
+const events = new SuperEvents();
+
+events.on('event1', (data) => {
+  // data.userID and data.age are autocompleted and type-hinted
+});
+
+events.emit('event2', { orderId: 123, amount: 99.99 });
+```
+
+**Tips:**
+- Use `@type {SuperEvents<MyEvents>}` to annotate your instance.
+- Use `@typedef` to describe your event map.
+- Make sure your editor is using your `jsconfig.json` for best results.
+- Add `// @ts-check` to the top of your JS files for even stricter type checking.
+
+## Troubleshooting
+
+- **No autocomplete or type hints in JS?**
+  - Make sure you have a `jsconfig.json` in your project root.
+  - Restart your editor after adding or changing `jsconfig.json`.
+  - Use JSDoc typedefs and `@type` annotations as shown above.
+- **Getting type errors in generated JS files?**
+  - Exclude your `dist/` folder from type checking in your `jsconfig.json` or `tsconfig.json`.
+- **TypeScript errors about event names or payloads?**
+  - Double-check your event map and usage. TypeScript will catch any mismatches!
 
 ## API
 

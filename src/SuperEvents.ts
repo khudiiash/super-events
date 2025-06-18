@@ -1,33 +1,41 @@
 /**
  * SuperEvents: A flexible event/observer system with return values, async, and once support.
  *
- * Usage:
- *   const events = SuperEvents.getInstance();
- *   events.on('event', (data) => ...);
- *   events.emit('event', data);
- *   events.callAll('event', data); // gets return values (sync)
- *   await events.callAllAsync('event', data); // gets return values (async)
- *   events.callFirst('event', data); // gets the first non-null return value
- *   await events.callFirstAsync('event', data); // gets the first non-null return value
+ * Usage (TypeScript):
+ *   interface MyEvents {
+ *     event1: { userID: string; age: number };
+ *     orderCreated: { orderId: number; amount: number };
+ *     userLogout: undefined;
+ *   }
+ *   const events = new SuperEvents<MyEvents>();
+ *   events.on('event1', (data) => { ... });
+ *   events.emit('orderCreated', { orderId: 1, amount: 100 });
+ *
+ * Usage (JavaScript):
+ *   @typedef {{
+ *     event1: { userID: string; age: number },
+ *     event2: { orderId: number; amount: number },
+ *   }} MyEvents
+ *
+ *   @type {SuperEvents<MyEvents>}
+ *   const events = new SuperEvents();
+ *   events.on('event1', (data) => { ... });
+ *   events.emit('orderCreated', { orderId: 1, amount: 100 });
  */
-
-export type Listener<T = any, R = any> = (payload: T) => R | Promise<R>;
-
-interface ListenerEntry<T = any, R = any> {
-  callback: Listener<T, R>;
-  once: boolean;
-}
-
-export class SuperEvents {
-  private static instance: SuperEvents | null = null;
+/**
+ * @template {Record<string, any>} Events
+ */
+export class SuperEvents<Events extends Record<string, any> = any> {
+  private static instance: SuperEvents<any> | null = null;
   private events: Map<string, ListenerEntry[]> = new Map();
 
   public constructor() {}
 
   /**
    * Get the singleton instance of SuperEvents.
+   * @returns {SuperEvents<Events>}
    */
-  static getInstance(): SuperEvents {
+  static getInstance<Events extends Record<string, any> = any>(): SuperEvents<Events> {
     if (!SuperEvents.instance) {
       SuperEvents.instance = new SuperEvents();
     }
@@ -36,46 +44,46 @@ export class SuperEvents {
 
   /**
    * Register a listener for an event.
-   * @param event Event name
-   * @param callback Listener function
-   * @returns Unsubscribe function
+   * @param {keyof Events} event Event name
+   * @param {(payload: Events[typeof event]) => any} callback Listener function
+   * @returns {() => void} Unsubscribe function
    */
-  on<T = any, R = any>(event: string, callback: Listener<T, R>): () => void {
-    return this._addListener(event, callback, false);
+  on<K extends keyof Events>(event: K, callback: Listener<Events[K], any>): () => void {
+    return this._addListener(event as string, callback, false);
   }
 
   /**
    * Register a one-time listener for an event.
-   * @param event Event name
-   * @param callback Listener function
-   * @returns Unsubscribe function
+   * @param {keyof Events} event Event name
+   * @param {(payload: Events[typeof event]) => any} callback Listener function
+   * @returns {() => void} Unsubscribe function
    */
-  once<T = any, R = any>(event: string, callback: Listener<T, R>): () => void {
-    return this._addListener(event, callback, true);
+  once<K extends keyof Events>(event: K, callback: Listener<Events[K], any>): () => void {
+    return this._addListener(event as string, callback, true);
   }
 
   /**
    * Remove a listener for an event.
-   * @param event Event name
-   * @param callback Listener function
+   * @param {keyof Events} event Event name
+   * @param {(payload: Events[typeof event]) => any} callback Listener function
    */
-  off<T = any, R = any>(event: string, callback: Listener<T, R>): void {
-    if (!this.events.has(event)) return;
-    const listeners = this.events.get(event)!;
+  off<K extends keyof Events>(event: K, callback: Listener<Events[K], any>): void {
+    if (!this.events.has(event as string)) return;
+    const listeners = this.events.get(event as string)!;
     const idx = listeners.findIndex(entry => entry.callback === callback);
     if (idx !== -1) listeners.splice(idx, 1);
-    if (listeners.length === 0) this.events.delete(event);
+    if (listeners.length === 0) this.events.delete(event as string);
   }
 
   /**
    * Emit an event to all listeners synchronously. Does not support async listeners.
-   * @param event Event name
-   * @param data Arguments to pass to listeners
+   * @param {keyof Events} event Event name
+   * @param {Events[typeof event]} data Arguments to pass to listeners
    * @returns void
    */
-  emit<T = any, R = any>(event: string, data: T): void {
-    if (!this.events.has(event)) return;
-    const listeners = this.events.get(event)!;
+  emit<K extends keyof Events>(event: K, data: Events[K]): void {
+    if (!this.events.has(event as string)) return;
+    const listeners = this.events.get(event as string)!;
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
       const result = callback(data);
@@ -87,18 +95,18 @@ export class SuperEvents {
         i--;
       }
     }
-    if (listeners.length === 0) this.events.delete(event);
+    if (listeners.length === 0) this.events.delete(event as string);
   }
 
   /**
    * Emit an event to all listeners asynchronously. Supports async listeners.
-   * @param event Event name
-   * @param data Arguments to pass to listeners
+   * @param {keyof Events} event Event name
+   * @param {Events[typeof event]} data Arguments to pass to listeners
    * @returns Promise<void>
    */
-  async emitAsync<T = any, R = any>(event: string, data: T): Promise<void> {
-    if (!this.events.has(event)) return;
-    const listeners = this.events.get(event)!;
+  async emitAsync<K extends keyof Events>(event: K, data: Events[K]): Promise<void> {
+    if (!this.events.has(event as string)) return;
+    const listeners = this.events.get(event as string)!;
     const promises: Promise<any>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
@@ -108,20 +116,20 @@ export class SuperEvents {
         i--;
       }
     }
-    if (listeners.length === 0) this.events.delete(event);
+    if (listeners.length === 0) this.events.delete(event as string);
     await Promise.all(promises);
   }
 
   /**
    * Call all listeners for an event and get their return values synchronously.
    * Returns an array of all listeners return values.
-   * @param event Event name
-   * @param args Arguments to pass to listeners
+   * @param {keyof Events} event Event name
+   * @param {Events[typeof event]} data Arguments to pass to listeners
    * @returns Array of listener return values
    */
-  callAll<T = any, R = any>(event: string, data: T): R | R[] {
-    if (!this.events.has(event)) return [];
-    const listeners = this.events.get(event)!;
+  callAll<K extends keyof Events, R = any>(event: K, data: Events[K]): R | R[] {
+    if (!this.events.has(event as string)) return [];
+    const listeners = this.events.get(event as string)!;
     const results: R[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
@@ -135,19 +143,19 @@ export class SuperEvents {
         i--;
       }
     }
-    if (listeners.length === 0) this.events.delete(event);
+    if (listeners.length === 0) this.events.delete(event as string);
     return results;
   }
 
   /**
    * Call all listeners for an event and get their return values (sync or async).
-   * @param event Event name
-   * @param args Arguments to pass to listeners
+   * @param {keyof Events} event Event name
+   * @param {Events[typeof event]} data Arguments to pass to listeners
    * @returns Promise of all listener return values
    */
-  async callAllAsync<T = any, R = any>(event: string, data: T): Promise<R | R[]> {
-    if (!this.events.has(event)) return [];
-    const listeners = this.events.get(event)!;
+  async callAllAsync<K extends keyof Events, R = any>(event: K, data: Events[K]): Promise<R | R[]> {
+    if (!this.events.has(event as string)) return [];
+    const listeners = this.events.get(event as string)!;
     const promises: Promise<R>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
@@ -157,7 +165,7 @@ export class SuperEvents {
         i--;
       }
     }
-    if (listeners.length === 0) this.events.delete(event);
+    if (listeners.length === 0) this.events.delete(event as string);
     return Promise.all(promises);
   }
 
@@ -166,17 +174,17 @@ export class SuperEvents {
     const entry: ListenerEntry = { callback, once };
     this.events.get(event)!.push(entry);
     // Return unsubscribe function
-    return () => this.off(event, callback);
+    return () => this.off(event as any, callback);
   }
 
   /**
    * Call all listeners for an event and get the first non-null return value.
-   * @param event Event name
-   * @param args Arguments to pass to listeners
+   * @param {keyof Events} event Event name
+   * @param {Events[typeof event]} data Arguments to pass to listeners
    * @returns First non-null and non-undefined return value
    */
-  callFirst<T = any, R = any>(event: string, data: T): R | undefined {
-    const results = this.callAll<T, R>(event, data);
+  callFirst<K extends keyof Events, R = any>(event: K, data: Events[K]): R | undefined {
+    const results = this.callAll<K, R>(event, data);
     if (Array.isArray(results)) {
       return results.find(r => r != null && r != undefined);
     }
@@ -185,13 +193,13 @@ export class SuperEvents {
 
   /**
    * Call all listeners for an event and get the first non-null return value.
-   * @param event Event name
-   * @param args Arguments to pass to listeners
+   * @param {keyof Events} event Event name
+   * @param {Events[typeof event]} data Arguments to pass to listeners
    * @returns First non-null and non-undefined return value
    */
-  async callFirstAsync<T = any, R = any>(event: string, data: T): Promise<R | undefined> {
-    if (!this.events.has(event)) return undefined;
-    const listeners = this.events.get(event)!;
+  async callFirstAsync<K extends keyof Events, R = any>(event: K, data: Events[K]): Promise<R | undefined> {
+    if (!this.events.has(event as string)) return undefined;
+    const listeners = this.events.get(event as string)!;
     const promises: Promise<R>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
@@ -201,7 +209,7 @@ export class SuperEvents {
         i--;
       }
     }
-    if (listeners.length === 0) this.events.delete(event);
+    if (listeners.length === 0) this.events.delete(event as string);
     const results = await Promise.all(promises);
     if (results.length === 1) return results[0];
     return results.find(r => r != null && r != undefined);
@@ -213,4 +221,11 @@ export class SuperEvents {
   clear(): void {
     this.events.clear();
   }
+}
+
+export type Listener<T = any, R = any> = (payload: T) => R | Promise<R>;
+
+interface ListenerEntry<T = any, R = any> {
+  callback: Listener<T, R>;
+  once: boolean;
 } 
