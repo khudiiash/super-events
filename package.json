@@ -22,6 +22,10 @@
   ],
   "author": "khudiiash",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/khudiiash/super-events.git"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.0.0",
