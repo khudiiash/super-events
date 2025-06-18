@@ -32,10 +32,12 @@ events.once('my:event', (payload) => {
   return payload * 2;
 });
 
-// Emit an event (async, supports await)
+// Emit an event (sync, void)
+events.emit('my:event', 5);
+
+// Emit an event (async, void)
 (async () => {
-  const results = await events.emit('my:event', 5);
-  console.log(results); // [6, 10]
+  await events.emitAsync('my:event', 5);
 })();
 
 // Call and get return values (sync)
@@ -73,33 +75,26 @@ Register a listener for an event. Returns an unsubscribe function.
 ### `once(event, callback): () => void`
 Register a one-time listener for an event. Returns an unsubscribe function.
 
-### `off(event, callback)`
-Remove a listener for an event.
+### `off(event, callback): void`
+Remove a specific listener for an event.
 
-### `emit(event, ...args): Promise<any[]>`
-Emit an event to all listeners. Supports async listeners. Returns a promise of all listener results.
+### `emit(event, data): void`
+Emit an event to all listeners synchronously. Does not support async listeners. Does not return any value.
+
+### `emitAsync(event, data): Promise<void>`
+Emit an event to all listeners asynchronously. Supports async listeners. Does not return any value.
 
 ### `callAll(event, data): any[]`
-Call all listeners for an event and get their return values synchronously. Returns an array of all listener return values.
+Call all listeners for an event synchronously and get their return values. Throws if any listener is async.
 
 ### `callAllAsync(event, data): Promise<any[]>`
-Call all listeners for an event and get their return values (sync or async). Returns a promise of all listener return values.
+Call all listeners for an event and get their return values (supports async listeners). Returns a promise of all listener return values.
 
 ### `callFirst(event, data): any`
-Call all listeners for an event and get the first non-null return value (sync).
+Call all listeners for an event synchronously and get the first non-null return value. Throws if any listener is async.
 
 ### `callFirstAsync(event, data): Promise<any>`
-Call all listeners for an event and get the first non-null return value (async).
+Call all listeners for an event and get the first non-null return value (supports async listeners). Returns a promise of the first non-null return value.
 
-### `clear()`
+### `clear(): void`
 Remove all listeners for all events.
-
-## Features
-- **Loose coupling**: Emitters and listeners are decoupled
-- **Return values**: Get results from listeners
-- **Async support**: Listeners can be async
-- **Once listeners**: Auto-remove after first call
-- **Unsubscribe**: Remove listeners at any time
-
-## License
-MIT 

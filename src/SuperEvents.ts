@@ -68,25 +68,48 @@ export class SuperEvents {
   }
 
   /**
-   * Emit an event to all listeners. Supports async listeners.
+   * Emit an event to all listeners synchronously. Does not support async listeners.
    * @param event Event name
-   * @param args Arguments to pass to listeners
-   * @returns Promise of all listener results
+   * @param data Arguments to pass to listeners
+   * @returns void
    */
-  async emit<T = any, R = any>(event: string, data: T): Promise<R[]> {
-    if (!this.events.has(event)) return [];
+  emit<T = any, R = any>(event: string, data: T): void {
+    if (!this.events.has(event)) return;
     const listeners = this.events.get(event)!;
-    const results: Promise<R>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      results.push(Promise.resolve(callback(data)));
+      const result = callback(data);
+      if (result instanceof Promise) {
+        throw new Error('SuperEvents: emit() cannot be used with async listeners. Use emitAsync() instead.');
+      }
       if (once) {
         listeners.splice(i, 1);
         i--;
       }
     }
     if (listeners.length === 0) this.events.delete(event);
-    return Promise.all(results);
+  }
+
+  /**
+   * Emit an event to all listeners asynchronously. Supports async listeners.
+   * @param event Event name
+   * @param data Arguments to pass to listeners
+   * @returns Promise<void>
+   */
+  async emitAsync<T = any, R = any>(event: string, data: T): Promise<void> {
+    if (!this.events.has(event)) return;
+    const listeners = this.events.get(event)!;
+    const promises: Promise<any>[] = [];
+    for (let i = 0; i < listeners.length; i++) {
+      const { callback, once } = listeners[i];
+      promises.push(Promise.resolve(callback(data)));
+      if (once) {
+        listeners.splice(i, 1);
+        i--;
+      }
+    }
+    if (listeners.length === 0) this.events.delete(event);
+    await Promise.all(promises);
   }
 
   /**
@@ -123,8 +146,19 @@ export class SuperEvents {
    * @returns Promise of all listener return values
    */
   async callAllAsync<T = any, R = any>(event: string, data: T): Promise<R | R[]> {
-    const results = await this.emit<T, R>(event, data);
-    return results;
+    if (!this.events.has(event)) return [];
+    const listeners = this.events.get(event)!;
+    const promises: Promise<R>[] = [];
+    for (let i = 0; i < listeners.length; i++) {
+      const { callback, once } = listeners[i];
+      promises.push(Promise.resolve(callback(data)));
+      if (once) {
+        listeners.splice(i, 1);
+        i--;
+      }
+    }
+    if (listeners.length === 0) this.events.delete(event);
+    return Promise.all(promises);
   }
 
   private _addListener<T, R>(event: string, callback: Listener<T, R>, once: boolean): () => void {
@@ -156,10 +190,21 @@ export class SuperEvents {
    * @returns First non-null and non-undefined return value
    */
   async callFirstAsync<T = any, R = any>(event: string, data: T): Promise<R | undefined> {
-    return this.emit<T, R>(event, data).then(results => {
-      if (results.length === 1) return results[0];
-      return results.find(r => r != null && r != undefined);
-    });
+    if (!this.events.has(event)) return undefined;
+    const listeners = this.events.get(event)!;
+    const promises: Promise<R>[] = [];
+    for (let i = 0; i < listeners.length; i++) {
+      const { callback, once } = listeners[i];
+      promises.push(Promise.resolve(callback(data)));
+      if (once) {
+        listeners.splice(i, 1);
+        i--;
+      }
+    }
+    if (listeners.length === 0) this.events.delete(event);
+    const results = await Promise.all(promises);
+    if (results.length === 1) return results[0];
+    return results.find(r => r != null && r != undefined);
   }
 
   /**

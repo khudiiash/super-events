@@ -53,8 +53,13 @@ describe('SuperEvents', () => {
   it('should support async listeners', async () => {
     events.on('async', async (x: number) => x + 10);
     events.on('async', (x: number) => Promise.resolve(x * 3));
-    const results = await events.emit('async', 2);
-    expect(results).toEqual([12, 6]);
+    const fn1 = jest.fn();
+    const fn2 = jest.fn();
+    events.on('async', async (x: number) => { fn1(x); return x + 10; });
+    events.on('async', (x: number) => { fn2(x); return Promise.resolve(x * 3); });
+    await events.emitAsync('async', 2);
+    expect(fn1).toHaveBeenCalledWith(2);
+    expect(fn2).toHaveBeenCalledWith(2);
   });
 
   it('should remove listeners with off', async () => {
@@ -79,7 +84,7 @@ describe('SuperEvents', () => {
     const fn = jest.fn();
     const unsub = events.on('unsub', fn);
     unsub();
-    await events.emit('unsub', 1);
+    events.emit('unsub', 1);
     expect(fn).not.toHaveBeenCalled();
   });
 
