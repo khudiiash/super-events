@@ -38,10 +38,24 @@ events.once('my:event', (payload) => {
   console.log(results); // [6, 10]
 })();
 
-// Call and get return values
+// Call and get return values (sync)
+const results = events.callAll('my:event', 10);
+console.log(results); // [11, 20]
+
+// Call and get return values (async)
 (async () => {
-  const results = await events.call('my:event', 10);
+  const results = await events.callAllAsync('my:event', 10);
   console.log(results); // [11, 20]
+})();
+
+// Get the first non-null return value (sync)
+const first = events.callFirst('my:event', 10);
+console.log(first); // 11
+
+// Get the first non-null return value (async)
+(async () => {
+  const first = await events.callFirstAsync('my:event', 10);
+  console.log(first); // 11
 })();
 
 // Unsubscribe
@@ -65,8 +79,17 @@ Remove a listener for an event.
 ### `emit(event, ...args): Promise<any[]>`
 Emit an event to all listeners. Supports async listeners. Returns a promise of all listener results.
 
-### `call(event, ...args): Promise<any[]>`
-Call all listeners for an event and get their return values (sync or async).
+### `callAll(event, data): any[]`
+Call all listeners for an event and get their return values synchronously. Returns an array of all listener return values.
+
+### `callAllAsync(event, data): Promise<any[]>`
+Call all listeners for an event and get their return values (sync or async). Returns a promise of all listener return values.
+
+### `callFirst(event, data): any`
+Call all listeners for an event and get the first non-null return value (sync).
+
+### `callFirstAsync(event, data): Promise<any>`
+Call all listeners for an event and get the first non-null return value (async).
 
 ### `clear()`
 Remove all listeners for all events.

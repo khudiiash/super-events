@@ -11,26 +11,26 @@ describe('SuperEvents', () => {
   it('should call listeners and return their values', async () => {
     events.on('test', (x: number) => x + 1);
     events.on('test', (x: number) => x * 2);
-    const results = await events.call('test', 5);
+    const results = await events.callAll('test', 5);
     expect(results).toEqual([6, 10]);
   });
 
   it('should return array even if only one listener (call)', async () => {
     events.on('single', (x: number) => x + 42);
-    const result = await events.call('single', 8);
+    const result = await events.callAll('single', 8);
     expect(result).toEqual([50]);
   });
 
   it('should return array even if only one listener (callAsync)', async () => {
     events.on('asyncSingle', async (x: number) => x * 3);
-    const result = await events.callAsync('asyncSingle', 7);
+    const result = await events.callAllAsync('asyncSingle', 7);
     expect(result).toEqual([21]);
   });
 
   it('should return array if multiple listeners (callAsync)', async () => {
     events.on('asyncMulti', async (x: number) => x + 1);
     events.on('asyncMulti', async (x: number) => x + 2);
-    const result = await events.callAsync('asyncMulti', 5);
+    const result = await events.callAllAsync('asyncMulti', 5);
     expect(result).toEqual([6, 7]);
   });
 
@@ -38,7 +38,7 @@ describe('SuperEvents', () => {
     events.on('find', (x: number) => null);
     events.on('find', (x: number) => undefined);
     events.on('find', (x: number) => x * 2);
-    const result = events.first('find', 4);
+    const result = events.callFirst('find', 4);
     expect(result).toBe(8);
   });
 
@@ -46,7 +46,7 @@ describe('SuperEvents', () => {
     events.on('findAsync', async (x: number) => null);
     events.on('findAsync', async (x: number) => undefined);
     events.on('findAsync', async (x: number) => x * 2);
-    const result = await events.firstAsync('findAsync', 4);
+    const result = await events.callFirstAsync('findAsync', 4);
     expect(result).toBe(8);
   });
 
@@ -61,15 +61,15 @@ describe('SuperEvents', () => {
     const cb = (x: number) => x + 1;
     events.on('off', cb);
     events.off('off', cb);
-    const results = await events.call('off', 1);
+    const results = await events.callAll('off', 1);
     expect(results).toEqual([]);
   });
 
   it('should support once listeners', async () => {
     const fn = jest.fn((x: number) => x * 2);
     events.once('once', fn);
-    const r1 = await events.call('once', 3);
-    const r2 = await events.call('once', 3);
+    const r1 = await events.callAll('once', 3);
+    const r2 = await events.callAll('once', 3);
     expect(r1).toEqual([6]);
     expect(r2).toEqual([]);
     expect(fn).toHaveBeenCalledTimes(1);

@@ -2,11 +2,13 @@
  * SuperEvents: A flexible event/observer system with return values, async, and once support.
  *
  * Usage:
- *   const events = new SuperEvents();
+ *   const events = SuperEvents.getInstance();
  *   events.on('event', (data) => ...);
- *   events.emit('event', ...args);
- *   events.call('event', ...args); // gets return values (sync)
- *   await events.callAsync('event', ...args); // gets return values (async)
+ *   events.emit('event', data);
+ *   events.callAll('event', data); // gets return values (sync)
+ *   await events.callAllAsync('event', data); // gets return values (async)
+ *   events.callFirst('event', data); // gets the first non-null return value
+ *   await events.callFirstAsync('event', data); // gets the first non-null return value
  */
 
 export type Listener<T = any, R = any> = (payload: T) => R | Promise<R>;
@@ -71,13 +73,13 @@ export class SuperEvents {
    * @param args Arguments to pass to listeners
    * @returns Promise of all listener results
    */
-  async emit<T = any, R = any>(event: string, ...args: [T]): Promise<R[]> {
+  async emit<T = any, R = any>(event: string, data: T): Promise<R[]> {
     if (!this.events.has(event)) return [];
     const listeners = this.events.get(event)!;
     const results: Promise<R>[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      results.push(Promise.resolve(callback(...args)));
+      results.push(Promise.resolve(callback(data)));
       if (once) {
         listeners.splice(i, 1);
         i--;
@@ -89,18 +91,18 @@ export class SuperEvents {
 
   /**
    * Call all listeners for an event and get their return values synchronously.
-   * Throws if any listener returns a Promise (i.e., is async).
+   * Returns an array of all listeners return values.
    * @param event Event name
    * @param args Arguments to pass to listeners
    * @returns Array of listener return values
    */
-  call<T = any, R = any>(event: string, ...args: [T]): R | R[] {
+  callAll<T = any, R = any>(event: string, data: T): R | R[] {
     if (!this.events.has(event)) return [];
     const listeners = this.events.get(event)!;
     const results: R[] = [];
     for (let i = 0; i < listeners.length; i++) {
       const { callback, once } = listeners[i];
-      const result = callback(...args);
+      const result = callback(data);
       if (result instanceof Promise) {
         throw new Error('SuperEvents: call() cannot be used with async listeners. Use callAsync() instead.');
       }
@@ -120,8 +122,8 @@ export class SuperEvents {
    * @param args Arguments to pass to listeners
    * @returns Promise of all listener return values
    */
-  async callAsync<T = any, R = any>(event: string, ...args: [T]): Promise<R | R[]> {
-    const results = await this.emit<T, R>(event, ...args);
+  async callAllAsync<T = any, R = any>(event: string, data: T): Promise<R | R[]> {
+    const results = await this.emit<T, R>(event, data);
     return results;
   }
 
@@ -139,8 +141,8 @@ export class SuperEvents {
    * @param args Arguments to pass to listeners
    * @returns First non-null and non-undefined return value
    */
-  first<T = any, R = any>(event: string, ...args: [T]): R | undefined {
-    const results = this.call<T, R>(event, ...args);
+  callFirst<T = any, R = any>(event: string, data: T): R | undefined {
+    const results = this.callAll<T, R>(event, data);
     if (Array.isArray(results)) {
       return results.find(r => r != null && r != undefined);
     }
@@ -153,8 +155,8 @@ export class SuperEvents {
    * @param args Arguments to pass to listeners
    * @returns First non-null and non-undefined return value
    */
-  async firstAsync<T = any, R = any>(event: string, ...args: [T]): Promise<R | undefined> {
-    return this.emit<T, R>(event, ...args).then(results => {
+  async callFirstAsync<T = any, R = any>(event: string, data: T): Promise<R | undefined> {
+    return this.emit<T, R>(event, data).then(results => {
       if (results.length === 1) return results[0];
       return results.find(r => r != null && r != undefined);
     });
