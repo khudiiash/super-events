@@ -1,6 +1,6 @@
 {
   "name": "@khudiiash/super-events",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "",
   "main": "dist/SuperEvents.js",
   "types": "dist/SuperEvents.d.ts",
@@ -8,7 +8,18 @@
     "build": "tsc",
     "test": "jest"
   },
-  "keywords": ["events", "event-emitter", "event-bus", "event-dispatcher", "event-listener", "event-handler", "event-bus", "event-dispatcher", "event-listener", "event-handler"],
+  "keywords": [
+    "events",
+    "event-emitter",
+    "event-bus",
+    "event-dispatcher",
+    "event-listener",
+    "event-handler",
+    "event-bus",
+    "event-dispatcher",
+    "event-listener",
+    "event-handler"
+  ],
   "author": "khudiiash",
   "license": "ISC",
   "devDependencies": {
