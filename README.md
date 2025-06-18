@@ -5,6 +5,7 @@ A flexible, decoupled event/observer system for TypeScript and JavaScript with:
 - Async/await support
 - Once listeners
 - Unsubscribe support
+- **Global and local event systems**
 
 ## Installation
 
@@ -17,8 +18,11 @@ npm install @khudiiash/super-events
 ```typescript
 import { SuperEvents } from '@khudiiash/super-events';
 
-// Get the singleton instance
+// Get the singleton instance (global event system)
 const events = SuperEvents.getInstance();
+
+// Or create a local event system for a specific object/module
+const localEvents = new SuperEvents();
 
 // Register a listener
 const unsub = events.on('my:event', (payload) => {

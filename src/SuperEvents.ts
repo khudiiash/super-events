@@ -22,7 +22,7 @@ export class SuperEvents {
   private static instance: SuperEvents | null = null;
   private events: Map<string, ListenerEntry[]> = new Map();
 
-  private constructor() {}
+  public constructor() {}
 
   /**
    * Get the singleton instance of SuperEvents.

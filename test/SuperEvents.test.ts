@@ -102,4 +102,36 @@ describe('SuperEvents', () => {
     instance.clear();
     expect(instance['events'].size).toBe(0);
   });
+});
+
+describe('SuperEvents (local instances)', () => {
+  it('should allow creating independent local event systems', () => {
+    const local1 = new SuperEvents();
+    const local2 = new SuperEvents();
+    const global = SuperEvents.getInstance();
+    const fn1 = jest.fn();
+    const fn2 = jest.fn();
+    const fnGlobal = jest.fn();
+    local1.on('evt', fn1);
+    local2.on('evt', fn2);
+    global.on('evt', fnGlobal);
+    local1.emit('evt', 1);
+    local2.emit('evt', 2);
+    global.emit('evt', 3);
+    expect(fn1).toHaveBeenCalledWith(1);
+    expect(fn2).toHaveBeenCalledWith(2);
+    expect(fnGlobal).toHaveBeenCalledWith(3);
+    expect(fn1).toHaveBeenCalledTimes(1);
+    expect(fn2).toHaveBeenCalledTimes(1);
+    expect(fnGlobal).toHaveBeenCalledTimes(1);
+  });
+
+  it('local event systems should not share listeners', () => {
+    const local1 = new SuperEvents();
+    const local2 = new SuperEvents();
+    const fn1 = jest.fn();
+    local1.on('evt', fn1);
+    local2.emit('evt', 42);
+    expect(fn1).not.toHaveBeenCalled();
+  });
 }); 
